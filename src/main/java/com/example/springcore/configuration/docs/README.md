@@ -1,6 +1,6 @@
 `# Spring Configuration 패키지의 이해
 
-## 흐름도 다이어그램
+## 주요 흐름도 다이어그램
 ```text
 [MainRunner]
     ↓ 실행 
@@ -135,10 +135,10 @@ public  class Config {
 이 코드는 같아 보이는 코드 지만
 
 - **`@Configuration`의 경우**:
-   - `b()` 메서드에서 `a()` 호출 시, CGLIB 프록시가 `a()` 호출을 가로채서 스프링 컨테이너에서 이미 등록된 빈을 반환한다.
+   - `simpleBeanConsumer()` 메서드에서 `simpleBean()` 호출 시, CGLIB 프록시가 `simpleBean()` 호출을 가로채서 스프링 컨테이너에서 이미 등록된 빈을 반환한다.
    - 결과적으로 싱글톤을 보장한다.
 - **`@Component`의 경우**:
-   - `b()` 메서드에서 `a()`를 호출하면, 단순한 Java 메서드 호출로 처리됩니다.
+   - `simpleBeanConsumer()` 메서드에서 `simpleBean()`를 호출하면, 단순한 Java 메서드 호출로 처리된다.
    - 결과적으로 싱글톤을 보장하지 못한다.
 
 ## 정리 
@@ -146,6 +146,7 @@ public  class Config {
   - 자동 등록.
   - 메서드 호출 시 새로운 객체 생성 가능.
   - 간단한 Bean 등록에 적합.
+  - 싱글톤 보장 안됨.
 - `@Configuration`
   - 설정 관리 클래스.
   - `@Bean` 메서드를 통해 Bean 생성 및 의존성 주입 관리.
