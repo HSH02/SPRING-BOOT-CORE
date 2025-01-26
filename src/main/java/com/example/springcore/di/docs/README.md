@@ -68,16 +68,6 @@ FruitBasket 클래스는 Apple 객체에 의존하고 있다.
 4. 테스트 용이성
     - 의존성을 주입받고, 인터페이스에 의존하므로 만약 테스트를 할 시 모의 객체(Mock)을 주입하거나 직접 만든 테스트 객체를 주입하므로써 테스트를 수행할 수 있다. 
 
-- 의존성 주입의 주요 장점 
-  최종적으로 DI가 왜 쓰이는가? 라는 답변에는 다음과 같이 답변할 수 있다.
-
-1. 테스트 용이성: 인터페이스에 의존하고, 주입받으므로 테스트 객체나 단위 테스트에 유리하다.
-2. 결합도 감소: SOLID의 DIP 법칙에 따라 인터페이스에 의존하므로 변경에 유연해진다.
-3. 재사용성 향상: DI를 통해 객체 생성/관리를 외부에서 처리하므로, 여러 곳에서 사용할 수 있다.
-4. 유지보수성 증대: 객체를 중앙에서 관리하므로, 코드의 유지보수가 쉬워진다.
-5. 확장성: DI를 통해 새로운 기능이나 객체 변경이 필요할 경우, 기존 코드를 크게 변경하지 않고도 확장이 가능하다.
-6. 가독성: 중복 코드가 감소하고, 명확하게 각 클래스의 의존성을 드러낸다.
-
 * 여기서 언급하는 중앙이란 Spring의 ApplicationContext을 의미한다.
 
 ## 2. Spring의 의존성 주입이란?
@@ -185,131 +175,390 @@ public class FruitBasket {
 
 ### 3.1 ApplicationContext vs. BeanFactory
 - ApplicationContext와 BeanFactory의 차이점
-- 각 컨테이너의 특징 및 사용 사례
+
+**Bean**Factory는 스프링의 기본적인 Ioc 컨테이너로, 빈의 생성과 관리를 담당한다.
+
+ApplicationContext은 BeanFactor를 확장한 인터페이스로, 추가적인 부가기능을 제공한다.
+
+주요 차이점은 **로딩 방식**이다.
+
+BeanFactory: Lazy Loading 방식을 사용하여, 실제로 필요한 빈이 요청되기 전까지 빈을 로딩하지 않는다.
+
+**ApplicationContext**: Eager Loading 방식을 사용하여, 컨테이너가 초기화될 때 모든 빈을 미리 로딩한다.
+
+일반적으로는 ApplicationContext을 사용한다. 
 
 ### 3.2 객체 찾기 방식
 #### 3.2.1 byType
+- 동작 방식 : 
+  - Bean의 타입으로 객체를 검색.
+  - 타입이 일치하는 빈이 하나인 경우, 해당 빈을 주입.
+  - 타입이 일치하는 빈이 여러 개인 경우, 예외가 발생.
+
+
+```java
+@Component("myBean")
+public class MyBean {
+    public void doSomething() {
+        System.out.println("Hello from MyBean!");
+    }
+}
+
+@Component
+public class AnotherBean {
+
+    private final MyBean myBean;
+
+    @Autowired
+    public AnotherBean(MyBean myBean) { 
+        this.myBean = myBean;
+    }
+
+    public void execute() {
+        myBean.doSomething();
+    }
+}
+```
+
+타입 충돌 시 `@Primary` 혹은 `@Qualifier`로 해결 필요.
+주로 쓰이는 방법임.
+
 #### 3.2.2 byName
-- byType과 byName의 차이점
-- 각각의 장단점 및 사용 시기
+- 동작 방식:
+  - Bean 이름으로 객체를 검색.
+  - applicationContext.getBean("beanName") 형태로 호출.
 
-## 4. Bean 관리 및 구성
-### 4.1 Bean의 정의와 생명주기
-- Bean의 개념
-- Bean의 생성, 초기화, 소멸 과정
+```java
+@Component("myBean")
+public class MyBean implements bean {
+    public void doSomething() {
+        System.out.println("Hello from MyBean!");
+    }
+}
 
-### 4.2 @Component와 그 파생 어노테이션
-- @Component, @Service, @Repository, @Controller의 역할과 차이점
-- 스프링 애노테이션을 활용한 Bean 정의
+@Component("myBean2")
+public class MyBean implements bean {
+    public void doSomething() {
+        System.out.println("Hello from MyBean!");
+    }
+}
 
-### 4.3 @ComponentScan
-- @ComponentScan의 역할
-- 패키지 스캔 설정 방법
 
-### 4.4 @SpringBootApplication
-- @SpringBootApplication의 구성 요소
-- 자동 설정, 컴포넌트 스캔, Spring Boot 설정의 통합
+@Component
+public class AnotherBean {
 
-## 5. Annotation 기반 의존성 주입 외의 방법
-### 5.1 Java Configuration
-- @Configuration과 @Bean 어노테이션
-- Java 클래스를 통한 Bean 설정
+    private final bean myBean;
 
-### 5.2 XML 기반 설정
-- XML 파일을 통한 Bean 정의
-- XML 설정의 장단점
+    @Autowired
+    public AnotherBean(@Qualifier("myBean") MyBean myBean) {
+        this.myBean = myBean;
+    }
 
-## 6. 추가적인 Bean 설정 어노테이션
-### 6.1 @Value
-- 프로퍼티 값을 주입하는 방법
-- @Value의 다양한 사용 사례
+    public void execute() {
+        myBean.doSomething();
+    }
+}
+```
+### byType VS byName 
 
-### 6.2 @PropertySource
-- 외부 프로퍼티 파일 로딩
-- @PropertySource와 @Value의 연계 사용
+| 방식     | 장점       |단점| 사용 예시               |
+|--------|----------| -- |---------------------|
+| byType | 타입기반으로 검색 |타입 중복 시 예외 발생| 역할이 명확할 때           | 
+| byName | 이름 충돌 방지 |이름 변경 시 유지보수 어려움| 이름으로 Bean을 구분해야 할 때 |
 
-### 6.3 @Conditional
-- 조건부 Bean 등록
-- @Conditional의 다양한 구현과 사용 예제
+## 4. `@Primary`, `@Profile`, `@Qualifier`
+### 4.1 `@Primary`
 
-### 6.4 @Import
-- 다른 설정 클래스 또는 Bean을 가져오는 방법
-- @Import의 활용 사례
+여러 개의 Bean 중에서 하나의 Bean을 선택한다면 예외가 발생하며 Spring은 선택을 내리지 못한다.
+ 
+`@Primary`를 붙인다면 Bean이 자동으로 선택된다.
 
-## 7. @Primary, @Profile, @Qualifier
-### 7.1 @Primary
-- 기본 Bean 설정 방법
-- @Primary의 우선순위 규칙
+이 빈이 기본 값이라고 선언하는 것과 같다.
 
-### 7.2 @Profile
-- 환경별 Bean 등록
-- @Profile을 활용한 다중 환경 설정
+- 예시 코드
+```java
 
-### 7.3 @Qualifier
+@Repository
+@Primary // 기본적으로 주입될 Bean
+public class PrimaryUserRepository implements UserRepository {
+    @Override
+    public String getUserName() {
+        return "Primary User";
+    }
+}
+
+@Repository
+public class DefaultUserRepository implements UserRepository {
+    @Override
+    public String getUserName() {
+        return "Default User";
+    }
+}
+
+// 실행 결과: Primary User 출력
+```
+- `@Primary`의 우선순위 규칙
+
+1. `@Qualifier`로 지정된 Bean
+2. `@Primary`로 지정된 Bean
+3. 그 외 중복이면 에러 발생
+
+
+### 4.2 @Profile
+
+스프링 애플리케이션에서 개발(dev), 운영(prod), 테스트(test) 등의 환경별로 다른 Bean을 쓰고 싶을 때, @Profile을 사용한다.
+
+
+- 환경별 설정 파일 (application.properties 또는 application.yml) 
+    ```text
+    # application.properties
+    spring.profiles.active=dev
+    ``` 
+    ```text
+    # application.yml
+      spring:
+        profiles:
+          active: dev
+    ```
+
+- 예시 코드
+```java
+@Repository
+@Profile("prod")
+public class ProdUserRepository implements UserRepository {
+    @Override
+    public String getUserName() {
+        return "Production User";
+    }
+}
+
+@Repository
+@Profile("dev")
+public class DevUserRepository implements UserRepository {
+    @Override
+    public String getUserName() {
+        return "Developer User";
+    }
+}
+
+@Repository
+@Profile({"dev", "test"})
+public class DevTestUserRepository implements UserRepository {
+    @Override
+    public String getUserName() {
+        return "Dev/Test User";
+    }
+}
+// spring.profiles.active=dev인 경우에는 DevUserRepository와 DevTestUserRepository가 활성화.
+```
+
+
+- `@Profile` 우선순위
+
+1. spring.profiles.active에 명시된 환경
+2. 명시 없음 ➡️ default Profile 사용
+3. 다중 환경일 경우 해당 프로파일에 선언된 Bean들만 활성화
+
+### 4.3 @Qualifier
+`@Autowired` 는 타입 기반으로 Bean을 등록하지만, 특정 이름으로 등록해야 할 때가 있다.
+
+이떄 쓰이는 것이 `@Qualifier` 로 이름을 지정하여 사용된다.
+
 - 특정 Bean을 명시적으로 지정하는 방법
-- @Qualifier의 사용 사례
+```java
+@Service
+public class UserService {
 
-## 8. 순환 참조 에러
-### 8.1 @Lazy와 프록시를 통한 해결법
+    private final UserRepository userRepository;
+
+    @Autowired
+    public UserService(@Qualifier("customUserRepository") UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public String getWelcomeMessage() {
+        return "Welcome, " + userRepository.getUserName();
+    }
+
+}
+```
+- `@Qualifier`의 사용 사례
+
+  - Bean을 이름으로 구분해야 하는 경우
+  - 특정 Bean을 명시해서 주입하고 싶을 때
+
+### 요약 
+- `@Primary`: 기본 Bean 지정
+- `@Profile`: 환경별로 다른 Bean을 등록
+- `@Qualifier`: 이름으로 Bean을 지정
+
+## 5. 순환 참조 에러
+
+순환 참조는 두 개 이상의 빈이 서로를 의존할 때 발생한다.
+예로 A는 B를 참조하고 B는 A가 참조할 때 무한 루프에 빠질 수 있다.
+
+### 5.1 @Lazy와 프록시를 통한 해결법
 - @Lazy 어노테이션의 역할
+
+`@Lazy` 어노테이션은 해당 빈의 초기화를 지연시켜, 실제로 필요할 때까지 빈의 생성을 미룹니다.
+
+이를 통해 순환 참조 문제를 해결 할 수 있습니다.
+
 - 프록시를 활용한 순환 참조 해결
 
-### 8.2 설계 변경을 통한 해결법
-- 의존성 구조 재설계
-- 순환 참조를 피하기 위한 디자인 패턴
+`@Lazy`를 사용하면 스프링은 해당 빈의 프록시 객체를 생성하여 주입합니다. 
 
-## 9. Bean 이름 충돌 문제
-### 9.1 @Primary를 통한 해결법
-### 9.2 @Qualifier을 통한 해결법
+이 프록시 객체는 실제 빈의 초기화를 지연시키고, 실제 메서드 호출 시에만 초기화하여 순환 참조를 방지합니다.
+
+예시
+
+```java
+    @Autowired
+    public A(@Lazy B b) {
+        this.b = b;
+    }
+
+    @Autowired
+    public B(@Lazy A a) {
+        this.a = a;
+    }
+```
+
+
+### 5.2 설계 변경을 통한 해결법
+- 의존성 구조 재설계
+
+순환 참조는 근본적으로 설계상의 문제일 수 있으므로, 의존성 구조를 재검토하여 순환 의존을 제거하는 것이 좋습니다.
+
+예시 코드는 다음과 같습니다.
+
+```java
+@Component
+public class A {
+    private final Mediator mediator;
+
+    @Autowired
+    public A(Mediator mediator) {
+        this.mediator = mediator;
+    }
+
+    public void doSomething() {
+        System.out.println("A is doing something");
+        mediator.mediate("Action from A");
+    }
+}
+
+@Component
+public class B {
+    private final Mediator mediator;
+
+    @Autowired
+    public B(Mediator mediator) {
+        this.mediator = mediator;
+    }
+
+    public void doSomething() {
+        System.out.println("B is doing something");
+        mediator.mediate("Action from B");
+    }
+}
+
+@Component
+public class Mediator {
+    public void mediate(String action) {
+        System.out.println("Mediator is handling: " + action);
+    }
+}
+```
+
+## 6. Bean 이름 충돌 문제
+
+스프링 컨테이너에서 동일한 타입의 빈이 여러 개 존재할 때, 어떤 빈을 주입해야 할지 모호해지는 문제가 발생할 수 있습니다.
+
+이때는 `@Primary` 혹은 `@Qualifier`을 통해 해결할 수 있습니다.
+
+### 6.1 @Primary를 통한 해결법
+
+`@Primary` 어노테이션은 동일한 타입의 빈이 여러 개 있을 때, 우선적으로 주입할 빈을 지정합니다.
+
+```java
+@Repository
+@Primary // 기본적으로 주입될 Bean
+public class PrimaryUserRepository implements UserRepository {
+    @Override
+    public String getUserName() {
+        return "Primary User";
+    }
+}
+
+@Repository
+public class DefaultUserRepository implements UserRepository {
+    @Override
+    public String getUserName() {
+        return "Default User";
+    }
+}
+```
+위와 같이 `@Primary`를 사용하면, UserRepository 타입의 빈을 주입할 때 PrimaryUserRepository가 우선적으로 선택됩니다.
+
+### 6.2 @Qualifier을 통한 해결법
 - @Primary와 @Qualifier를 활용한 Bean 충돌 해결
 
-## 10. Best Practices (권장 사항)
-- 의존성 주입 시 피해야 할 패턴
-- 클린 코드와 의존성 주입의 연관성
-- 유지보수성과 확장성을 고려한 설계 팁
+`@Qualifier` 어노테이션은 빈 주입 시 특정 빈을 명시적으로 지정할 수 있도록 도와줍니다.
 
-## 11. 의존성 주입과 테스트
-### 11.1 단위 테스트
-- Mocking과 의존성 주입
-- 단위 테스트에서의 DI 활용 방법
+```java
+@Repository("customUserRepository") // 특정 이름을 지정
+public class CustomUserRepository implements UserRepository {
 
-### 11.2 통합 테스트
-- 통합 테스트 환경 설정
-- 실제 Bean을 활용한 테스트 시나리오
+    @Override
+    public String getUserName() {
+        return "Custom User";
+    }
 
-## 12. 추가적인 유용한 어노테이션
-### 12.1 @Resource
-- @Resource의 역할과 사용법
-- @Autowired와 @Resource의 비교
+}
 
-### 12.2 @Inject
-- JSR-330의 @Inject 어노테이션
-- Spring의 @Autowired와의 차이점
+@Repository("defaultUserRepository") // 특정 이름을 지정
+public class DefaultUserRepository implements UserRepository {
 
-## 13. JSR-330 어노테이션
-### 13.1 JSR-330 어노테이션이란?
-- JSR-330의 정의와 목적
-- 주요 어노테이션 소개 (@Inject, @Named, @Singleton 등)
+    @Override
+    public String getUserName() {
+        return "Default User";
+    }
 
-### 13.2 Spring과 JSR-330 어노테이션의 관계
-- Spring에서의 JSR-330 지원
-- Spring 전용 어노테이션과 JSR-330의 비교
+}
 
-### 13.3 Spring Annotations ↔️ JSR-330 Annotations Table
-| 기능            | Spring 전용 어노테이션    | JSR-330 어노테이션   |
-|-----------------|--------------------------|---------------------|
-| 의존성 주입     | `@Autowired`             | `@Inject`           |
-| 빈 식별         | `@Qualifier`             | `@Named`            |
-| 스코프 지정     | `@Scope`                 | `@Singleton`        |
-| 기타 어노테이션 | `@Component`, `@Service` 등 | `@Named` 등         |
+@Service
+public class UserService {
 
-### 13.4 JSR-330 어노테이션 사용 예제
-- `@Inject` vs `@Autowired`
-- `@Named` vs `@Qualifier`
-- 실제 코드 예제를 통한 비교
+    private final UserRepository userRepository;
 
-## 14. 결론
+    @Autowired
+    public UserService(@Qualifier("customUserRepository") UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+}
+```
+
+위와 같이 `@Qualifier`를 사용하여 특정 빈을 지정할 수 있습니다.
+
+
+### 6.3 @Primary와 @Qualifier의 우선순위
+
+- `@Qualifier`가 지정된 경우, 해당 빈이 우선적으로 주입됩니다.
+- `@Qualifier`가 없을 때는 `@Primary`가 지정된 빈이 주입됩니다.
+
+
+
+## 7. 결론
 - 의존성 주입의 중요성 요약
-- Spring에서의 DI 활용 방안
-- 표준화된 어노테이션의 장점과 권장 사용 방안
+
+의존성 주입은 스프링의 주요 개념으로 개발에만 구현에 집중할 수 있게 되었습니다.
+
+SOLID의 DIP와 관계가 있으며, 만약 테스트나 도중에 변경해야 할 상황이 닥쳐도 금방 변경할 수 있게 만들어줍니다.
+
+- Spring Boot에서의 DI 활용 방안
+
+Spring Boot에서는 테스트를 위한 변경이나, 각 환경에 따라 달리 주입할 수 있습니다.
+
 
