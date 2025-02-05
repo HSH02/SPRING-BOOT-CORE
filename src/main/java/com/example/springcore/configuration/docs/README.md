@@ -2,28 +2,31 @@
 
 ## 주요 흐름도 다이어그램
 ```text
-[MainRunner]
-    ↓ 실행 
-[AnnotationConfigApplicationContext(AppConfig)]
-    ↓ 구성 클래스 로드 
-[AppConfig (@Configuration)]
-    ├── [ServiceConfig, RepositoryConfig, ProfileConfig]를 Import
-    ↓ Bean 생성 및 의존성 주입
-[ServiceConfig (@Configuration)]
-    ├── Bean: MyService
-    │      ↳ [RepositoryConfig.myRepository()]에 의존
-    ↓
-[RepositoryConfig (@Configuration)]
-    ├── Bean: MyRepository
-    │      ↳ MyService에 데이터를 제공
-    ↓
-[ProfileConfig (@Configuration)]
-    ├── Bean: MyService (devService/prodService)
-    │      ↳ 프로파일 기반으로 [RepositoryConfig.myRepository()]에 의존
-    ↓
-[MyRepositoryImpl, MyServiceImpl]
-    ├── MyServiceImpl은 MyRepositoryImpl을 사용하여 작업을 수행
-    └── MyServiceImpl은 환경별 메시지 (Environment-specific Message)도 사용
+MainRunner (main 실행)
+   └── [1] AnnotationConfigApplicationContext(AppConfig.class) 생성
+         ├── AppConfig (Spring 설정 로드)
+         │     ├── @Import({ServiceConfig, RepositoryConfig, ProfileConfig}) -> 다른 설정 로드
+         │     ├── @ComponentScan("com.example.springcore.configuration.example") -> @Component 스캔
+         │
+         ├── RepositoryConfig (빈 등록)
+         │     └── @Bean myRepository() -> MyRepositoryImpl 생성
+         │
+         ├── ProfileConfig (빈 등록 - @Profile 기반)
+         │     ├── @Bean devService() (Profile="dev" 선택됨) 
+         │     │     └── MyServiceImpl(myRepository, "개발자 환경입니다!") 생성
+         │     ├── @Bean prodService() (Profile="prod"일 경우 실행됨) 
+         │     │     └── MyServiceImpl(myRepository, "배포 환경입니다!") 생성 
+         │
+         ├── MyBean (@Component 스캔으로 로드)
+         │     ├── @PostConstruct init() 실행 -> "[MyBean] Bean 생성!" 출력
+         │         
+         │
+   └── [2] context.getBean(MyService.class) -> devService 빈 선택됨
+         └── MyServiceImpl.performTask() 실행
+                ├── myRepository.fetchData() 호출 -> "데이터가 생성되었습니다." 출력
+                ├── 환경 메세지 출력 -> "[Service] 환경 메세지: 개발자 환경입니다!"
+   └── [3] context 종료 (try-with-resources로 자동 종료)
+         ├── MyBean.cleanup() 실행 -> "[MyBean] Bean 종료!" 출력
 ```
 
 

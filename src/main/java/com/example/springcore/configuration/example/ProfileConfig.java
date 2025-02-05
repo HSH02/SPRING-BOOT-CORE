@@ -13,13 +13,17 @@ public class ProfileConfig {
     @Bean
     @Profile("dev")
     public MyService devService(MyRepository myRepository) {
-        return new MyServiceImpl(myRepository, "Dev Environment Message");
+        System.out.println("[PROFILE] DEV 환경 활성화!");
+        System.out.println("[PROFILE] DEV 메세지가 주입되었습니다!");
+        return new MyServiceImpl(myRepository, "개발자 환경입니다!");
     }
 
     @Bean
     @Profile("prod")
     public MyService prodService(MyRepository myRepository) {
-        return new MyServiceImpl(myRepository, "Prod Environment Message");
+        System.out.println("[PROFILE] Prod 환경 활성화!");
+        System.out.println("[PROFILE] Prod 메세지가 주입되었습니다!");
+        return new MyServiceImpl(myRepository, "배포 환경입니다!");
     }
-    
+
 }

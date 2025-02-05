@@ -11,7 +11,7 @@ public class MyServiceImpl implements MyService {
 
     @Override
     public void performTask() {
-        System.out.println("다음을 사용하여 작업 수행: " + myRepository.fetchData());
-        System.out.println("Environment: " + environmentMessage);
+        System.out.println("[Service] 작업 수행: " + myRepository.fetchData());
+        System.out.println("[Service] 환경 메세지: " + environmentMessage);
     }
 }

@@ -6,16 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
-@Slf4j
 public class MyBean {
 
     @PostConstruct
     public void init() {
-        log.info("MyBean init");
+        System.out.println("[MyBean] Bean 생성 완료!");
     }
 
     @PreDestroy
     public void cleanup() {
-        log.info("MyBean cleanup");
+        System.out.println("[MyBean] Bean 종료!");
     }
 }
