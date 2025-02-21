@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 @Configuration
-@Import({RepositoryConfig.class, ProfileConfig.class})
+@Import({RepositoryComponent.class, ProfileConfig.class})
 @ComponentScan("com.example.springcore.configuration.example")
 public class AppConfig {
 }

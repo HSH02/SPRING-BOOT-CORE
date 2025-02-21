@@ -17,20 +17,6 @@ public class SpringTest {
         AnnotationConfigApplicationContext componentContext = new AnnotationConfigApplicationContext(ComponentConfig.class);
         ComponentConfig componentConfig = componentContext.getBean(ComponentConfig.class);
         singletonTest(componentConfig.simpleBean(), componentConfig.simpleBean(), componentContext);
-
-        /*
-        결과 값
-        ==== @Configuration Test ====
-        Bean1: 1311146128
-        Bean2: 1311146128
-        Same instance? true
-
-        ==== @Component Test ====
-        Bean1: 694452085
-        Bean2: 857068247
-        Same instance? false
-        */
-
     }
 
     private static void singletonTest(SimpleBean config, SimpleBean config1, AnnotationConfigApplicationContext configContext) {
@@ -45,6 +31,8 @@ public class SpringTest {
 
     @Configuration
     static class Config {
+        // 내부에서 SimpleBean()를 호출하지만,
+        // CGLIB 프록시가 개입하여 이미 생성된 SimpleBean Bean을 반환합니다.
         @Bean
         public SimpleBean simpleBean() {
             return new SimpleBean();
@@ -53,6 +41,7 @@ public class SpringTest {
 
     @Component
     static class ComponentConfig {
+        // 프록시가 없으므로 매번 새로운 인스턴스가 생성됩니다
         @Bean
         public SimpleBean simpleBean() {
             return new SimpleBean();
@@ -60,5 +49,6 @@ public class SpringTest {
     }
 
     static class SimpleBean {
+
     }
 }

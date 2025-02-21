@@ -5,6 +5,7 @@ public class MyServiceImpl implements MyService {
     private final String environmentMessage;
 
     public MyServiceImpl(MyRepository myRepository, String environmentMessage) {
+        System.out.println("[MyService] Service 주입이 완료되었습니다.");
         this.myRepository = myRepository;
         this.environmentMessage = environmentMessage;
     }

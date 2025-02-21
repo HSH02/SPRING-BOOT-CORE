@@ -4,29 +4,31 @@
 ```text
 MainRunner (main 실행)
    └── [1] AnnotationConfigApplicationContext(AppConfig.class) 생성
-         ├── AppConfig (Spring 설정 로드)
-         │     ├── @Import({ServiceConfig, RepositoryConfig, ProfileConfig}) -> 다른 설정 로드
+         ├── [1] AppConfig (Spring 설정 로드)
+         │     ├── @Import({RepositoryComponent, ProfileConfig}) -> 다른 설정 로드
          │     ├── @ComponentScan("com.example.springcore.configuration.example") -> @Component 스캔
          │
-         ├── RepositoryConfig (빈 등록)
-         │     └── @Bean myRepository() -> MyRepositoryImpl 생성
+         ├── [2] RepositoryComponent (빈 등록)
+         │     ├── @Bean myRepository() -> MyRepositoryImpl 생성
+         │     │     └── [REPOSITORY] MyRepository이 빈으로 등록되었습니다. 출력
          │
-         ├── ProfileConfig (빈 등록 - @Profile 기반)
+         ├── [3] ProfileConfig (빈 등록 - @Profile 기반)
          │     ├── @Bean devService() (Profile="dev" 선택됨) 
          │     │     └── MyServiceImpl(myRepository, "개발자 환경입니다!") 생성
          │     ├── @Bean prodService() (Profile="prod"일 경우 실행됨) 
          │     │     └── MyServiceImpl(myRepository, "배포 환경입니다!") 생성 
          │
-         ├── MyBean (@Component 스캔으로 로드)
+         ├── [4]MyBean (@Component 스캔으로 로드)
          │     ├── @PostConstruct init() 실행 -> "[MyBean] Bean 생성!" 출력
+         │           └── [MyService] Service 주입이 완료되었습니다. 출력
          │         
          │
    └── [2] context.getBean(MyService.class) -> devService 빈 선택됨
-         └── MyServiceImpl.performTask() 실행
+         └── [1] MyServiceImpl.performTask() 실행
                 ├── myRepository.fetchData() 호출 -> "데이터가 생성되었습니다." 출력
                 ├── 환경 메세지 출력 -> "[Service] 환경 메세지: 개발자 환경입니다!"
    └── [3] context 종료 (try-with-resources로 자동 종료)
-         ├── MyBean.cleanup() 실행 -> "[MyBean] Bean 종료!" 출력
+         ├── [1] MyBean.cleanup() 실행 -> "[MyBean] Bean 종료!" 출력
 ```
 
 
