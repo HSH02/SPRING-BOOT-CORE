@@ -60,6 +60,8 @@ public class LoggingAspect {
     public Object aroundAdvice(ProceedingJoinPoint joinPoint) throws Throwable {
         log.info("메서드 실행 전 (Around) : {}", joinPoint.getSignature().getName());
         Object result = joinPoint.proceed();
+        log.info("ProceedingJoinPoint proceed: {}", joinPoint.proceed());
+        log.info("ProceedingJoinPoint proceed: {}", joinPoint.proceed());
         log.info("메서드 실행 후` (Around) : {}", joinPoint.getSignature().getName());
         return result;
     }

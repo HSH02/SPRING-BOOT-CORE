@@ -7,7 +7,7 @@ public class AppMain {
 
         try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class)) {
             MyService myService = context.getBean(MyService.class);
-            myService.performTask();
+            // myService.performTask();
             myService.performTask2("test");
         }
     }
