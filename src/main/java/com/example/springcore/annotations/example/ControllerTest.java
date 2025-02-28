@@ -1,10 +1,13 @@
 package com.example.springcore.annotations.example;
 
+import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
-@org.springframework.stereotype.Controller
-public class Controller {
+@RestController
+public class ControllerTest {
 
 
     @RequestMapping(value = "/items", method = RequestMethod.GET)
